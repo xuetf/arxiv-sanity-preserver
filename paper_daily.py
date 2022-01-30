@@ -77,7 +77,7 @@ if __name__ == "__main__":
                         help='query used for arxiv API. See http://arxiv.org/help/api/user-manual#detailed_examples')
     parser.add_argument('--start-index', type=int, default=0, help='0 = most recent API result')
     parser.add_argument('--max-index', type=int, default=5, help='upper bound on paper index we will fetch')
-    parser.add_argument('--results-per-iteration', type=int, default=100, help='passed to arxiv API')
+    parser.add_argument('--results-per-iteration', type=int, default=10, help='passed to arxiv API')
     parser.add_argument('--wait-time', type=float, default=5.0,
                         help='lets be gentle to arxiv API (in number of seconds)')
     parser.add_argument('--break-on-no-added', type=int, default=1,
@@ -104,7 +104,9 @@ if __name__ == "__main__":
     is_first_line = True
     DEBUG = True
 
-    for keyword in ['graph']:
+    for keyword in ['graph', ['cold', 'start'],
+                    ['debias'], ['cross', 'domain'], ['meta', 'learning'],
+                    ['click', 'through']]:
         if isinstance(keyword, str): keyword = [keyword]
         search_query = generate_query(keyword, topic='recommendation')
         print('generated query={} for {}'.format(search_query, "-".join(keyword)))
@@ -129,7 +131,7 @@ if __name__ == "__main__":
 
                     # 读取最新的文章
                     check_date = j['updated_parsed'] if j['updated_parsed'] is not None else j['published_parsed']
-                    if check_date is not None and (year-check_date.tm_year) >= 2 and check_date.tm_mon != month:
+                    if check_date is not None and year != check_date.tm_year and check_date.tm_mon != month:
                         continue
 
                     if is_first_line:
