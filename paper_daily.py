@@ -57,6 +57,28 @@ def generate_query(keyword_list, topic='recommendation'):
     return "+AND+".join(queries)
 
 
+def translate(translator, txt, retry=5):
+    for i in range(retry):
+        try:
+            return translator.translate(txt, dest='zh-cn').text
+        except:
+            print('retry i={}'.format(i))
+
+    raise Exception('translate timeout...')
+
+
+def fetch(base_url, query, retry=5):
+    print('fetch, {}{}'.format(base_url, query))
+    for i in range(retry):
+        try:
+            with urllib.request.urlopen(base_url + query) as url:
+                return url.read()
+        except:
+            print('retry i={}'.format(i))
+
+    raise Exception('fetch timeout...')
+
+
 if __name__ == "__main__":
     import datetime
 
@@ -67,7 +89,8 @@ if __name__ == "__main__":
     fields = ['title', 'summary', 'authors', 'published', 'updated', 'url', 'version', 'cate']
     fy_fields = ['tran_title', 'tran_summary']
     translator = Translator()
-    print(translator.translate('hello world', dest='zh-cn').text)
+
+    print(translate(translator, 'hello world', retry=5))
 
     # parse input arguments
     parser = argparse.ArgumentParser()
@@ -115,9 +138,7 @@ if __name__ == "__main__":
             for i in range(args.start_index, args.max_index, args.results_per_iteration):
                 print("Results %i - %i" % (i, i + args.results_per_iteration))
                 query = 'search_query=%s&sortBy=lastUpdatedDate&start=%i&max_results=%i' % (search_query, i, args.results_per_iteration)
-                print(base_url + query)
-                with urllib.request.urlopen(base_url + query) as url:
-                    response = url.read()
+                response = fetch(base_url, query, retry=5)
                 parse = feedparser.parse(response)
                 num_added = 0
                 num_skipped = 0
@@ -143,8 +164,8 @@ if __name__ == "__main__":
                               time.strftime('%Y-%m-%d', j['published_parsed']), time.strftime('%Y-%m-%d', j['updated_parsed']), j['id'], str(version),
                               j['arxiv_primary_category']['term']]
 
-                    tran_title = translator.translate(record[fields.index('title')], dest='zh-cn').text
-                    tran_summary = translator.translate(record[fields.index('summary')], dest='zh-cn').text
+                    tran_title = translate(translator, record[fields.index('title')], retry=5)
+                    tran_summary = translate(translator, record[fields.index('summary')], retry=5)
 
                     if DEBUG:
                         print('title={}, tran_title={}'.format(record[fields.index('title')], tran_title))
