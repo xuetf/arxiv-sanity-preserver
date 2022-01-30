@@ -131,7 +131,7 @@ if __name__ == "__main__":
 
                     # 读取最新的文章
                     check_date = j['updated_parsed'] if j['updated_parsed'] is not None else j['published_parsed']
-                    if check_date is not None and year != check_date.tm_year and check_date.tm_mon != month:
+                    if check_date is not None and year != check_date.tm_year and check_date.tm_mon - month > 1:
                         continue
 
                     if is_first_line:
