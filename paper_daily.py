@@ -11,9 +11,6 @@ import random
 import argparse
 import urllib.request
 import feedparser
-from httpcore import SyncHTTPTransport
-from httpx import URLLib3Transport, URLLib3ProxyTransport
-
 from utils import Config, safe_pickle_dump
 from googletrans import Translator
 
@@ -57,10 +54,14 @@ def generate_query(keyword_list, topic='recommendation'):
     return "+AND+".join(queries)
 
 
-def translate(translator, txt, retry=5):
+def translate(translator, txt, retry=10):
     for i in range(retry):
         try:
-            return translator.translate(txt, dest='zh-cn').text
+            tran_txt = translator.translate(txt, dest='zh-cn').text
+            if is_contain_chinese(tran_txt):
+                return tran_txt
+            else:
+                print('not contain chinese, retry i={}, tran_txt={}'.format(i, tran_txt))
         except:
             print('retry i={}'.format(i))
 
@@ -79,6 +80,13 @@ def fetch(base_url, query, retry=5):
     raise Exception('fetch timeout...')
 
 
+def is_contain_chinese(check_str):
+    for ch in check_str:
+        if u'\u4e00' <= ch <= u'\u9fff':
+            return True
+    return False
+
+
 if __name__ == "__main__":
     import datetime
 
@@ -90,7 +98,7 @@ if __name__ == "__main__":
     fy_fields = ['tran_title', 'tran_summary']
     translator = Translator()
 
-    print(translate(translator, 'hello world', retry=5))
+    print(translate(translator, 'hello world', retry=10))
 
     # parse input arguments
     parser = argparse.ArgumentParser()
@@ -129,7 +137,9 @@ if __name__ == "__main__":
 
     for keyword in ['graph', ['cold', 'start'],
                     ['debias'], ['cross', 'domain'], ['meta', 'learning'],
-                    ['click', 'through']]:
+                    ['click', 'through'],
+                    ['Multi', 'task'],
+                    ['Multi', 'Modal']]:
         if isinstance(keyword, str): keyword = [keyword]
         search_query = generate_query(keyword, topic='recommendation')
         print('generated query={} for {}'.format(search_query, "-".join(keyword)))
@@ -152,7 +162,7 @@ if __name__ == "__main__":
 
                     # 读取最新的文章
                     check_date = j['updated_parsed'] if j['updated_parsed'] is not None else j['published_parsed']
-                    if check_date is not None and year != check_date.tm_year and check_date.tm_mon - month > 1:
+                    if check_date is not None and year != check_date.tm_year and check_date.tm_mon - month > 2:
                         continue
 
                     if is_first_line:
