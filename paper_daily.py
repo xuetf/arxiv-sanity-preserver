@@ -14,6 +14,32 @@ import feedparser
 from utils import Config, safe_pickle_dump
 from googletrans import Translator
 
+# pip install  googletrans=4.0.0rc1
+
+class TranslatorWrapper:
+    def __init__(self):
+        while True:
+            self.translator = Translator(service_urls=['translate.google.com'])
+            self.translator.client_type = 'webapp'
+            try:
+                trial = self.translator.detect_legacy('Hello there')
+                break
+            except Exception as e:
+                print(e)   # can be commented
+
+    def translate(self, txt, retry=10):
+        for i in range(retry):
+            try:
+                tran_txt = self.translator.translate(txt, dest='zh-cn').text
+                if is_contain_chinese(tran_txt):
+                    return tran_txt
+                else:
+                    print('not contain chinese, retry i={}, tran_txt={}'.format(i, tran_txt))
+            except Exception as e:
+                print('retry i={}, error={}'.format(i, e))
+
+        raise Exception('translate timeout...')
+
 
 def encode_feedparser_dict(d):
     """
@@ -46,26 +72,15 @@ def parse_arxiv_url(url):
     return parts[0], int(parts[1])
 
 
-def generate_query(keyword_list, topic='recommendation'):
+def generate_query(keyword_list, use_abs=False, topic='recommendation'):
     queries = []
     for kw in keyword_list + [topic]:
-        query = '%28ti:{kw}+OR+abs:{kw}%29'.format(kw=kw)
+        if use_abs:
+            query = '%28ti:{kw}+OR+abs:{kw}%29'.format(kw=kw)
+        else:
+            query = '%28ti:{kw}%29'.format(kw=kw)
         queries.append(query)
     return "+AND+".join(queries)
-
-
-def translate(translator, txt, retry=10):
-    for i in range(retry):
-        try:
-            tran_txt = translator.translate(txt, dest='zh-cn').text
-            if is_contain_chinese(tran_txt):
-                return tran_txt
-            else:
-                print('not contain chinese, retry i={}, tran_txt={}'.format(i, tran_txt))
-        except:
-            print('retry i={}'.format(i))
-
-    raise Exception('translate timeout...')
 
 
 def fetch(base_url, query, retry=5):
@@ -96,9 +111,8 @@ if __name__ == "__main__":
     sep = '\t'
     fields = ['title', 'summary', 'authors', 'published', 'updated', 'url', 'version', 'cate']
     fy_fields = ['tran_title', 'tran_summary']
-    translator = Translator()
-
-    print(translate(translator, 'hello world', retry=10))
+    translator = TranslatorWrapper()
+    print(translator.translate('hello world', retry=10))
 
     # parse input arguments
     parser = argparse.ArgumentParser()
@@ -132,16 +146,16 @@ if __name__ == "__main__":
     # main loop where we fetch the new results
     print('database has %d entries at start' % (len(db), ))
     num_added_total = 0
-    is_first_line = True
     DEBUG = True
 
-    for keyword in ['graph', ['cold', 'start'],
+    for keyword in [['graph'], ['cold', 'start'],
                     ['debias'], ['cross', 'domain'], ['meta', 'learning'],
                     ['click', 'through'],
                     ['Multi', 'task'],
                     ['Multi', 'Modal']]:
+        is_first_line = True
         if isinstance(keyword, str): keyword = [keyword]
-        search_query = generate_query(keyword, topic='recommendation')
+        search_query = generate_query(keyword, use_abs=False, topic='recommendation')
         print('generated query={} for {}'.format(search_query, "-".join(keyword)))
 
         with open('data/{}_{}.csv'.format("-".join(keyword), today.strftime('%Y-%m-%d')), 'w') as f:
@@ -174,8 +188,8 @@ if __name__ == "__main__":
                               time.strftime('%Y-%m-%d', j['published_parsed']), time.strftime('%Y-%m-%d', j['updated_parsed']), j['id'], str(version),
                               j['arxiv_primary_category']['term']]
 
-                    tran_title = translate(translator, record[fields.index('title')], retry=5)
-                    tran_summary = translate(translator, record[fields.index('summary')], retry=5)
+                    tran_title = translator.translate(record[fields.index('title')], retry=5)
+                    tran_summary = translator.translate(record[fields.index('summary')], retry=5)
 
                     if DEBUG:
                         print('title={}, tran_title={}'.format(record[fields.index('title')], tran_title))
