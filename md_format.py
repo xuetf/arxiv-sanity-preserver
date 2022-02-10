@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 
 
 def read_paper(data_path):
@@ -16,19 +17,20 @@ def read_paper(data_path):
 topics = {'graph': '基于Graph的推荐',
           'cold-start': '冷启动推荐',
           'cross-domain': '跨域推荐',
-          'meta-learning': '元学习',
+          'meta-learning': '基于元学习的推荐',
           'Multi-task': '多任务学习',
           'Multi-Modal': '多模态',
           'debias': '纠偏',
-          'click-through': 'CTR'}
+          'click-through': '点击率预估',
+          'recommendation': '推荐系统'}
 
-time = '2022-02-07'
+time = '2022-02-08'
 sep = '\t'
 
-markdown_papers = []
 for topic, alias_name in topics.items():
+    markdown_papers = []
     print('topic={}'.format(topic))
-    time_format_path = 'data/{}_{}.csv'.format(topic, time)
+    time_format_path = 'data/{}/csv/{}.csv'.format(time, topic)
     data_pd = read_paper(time_format_path)
     if data_pd is None:
         continue
@@ -47,7 +49,11 @@ for topic, alias_name in topics.items():
         # H1: title | trans_title
         markdown_papers.append([h1_title, summary_body])
 
-    with open('data/{}_{}_read_papers.md'.format(topic, time), 'w') as f:
+    if not os.path.exists("data/{}/md".format(time)):
+        os.mkdir("data/{}/md".format(time))
+
+    with open('data/{}/md/{}_read_papers.md'.format(time, topic), 'w') as f:
         f.write('# {}\n\n'.format(alias_name))
+        f.write("收录最新{}的前沿研究工作。\n\n".format(alias_name))
         for paper in markdown_papers:
             f.write("{}{}\n".format(paper[0], paper[1]))
