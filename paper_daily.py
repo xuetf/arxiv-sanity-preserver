@@ -276,7 +276,7 @@ if __name__ == "__main__":
                         help='query used for arxiv API. See http://arxiv.org/help/api/user-manual#detailed_examples')
     parser.add_argument('--start-index', type=int, default=0, help='0 = most recent API result')
     parser.add_argument('--max-index', type=int, default=5, help='upper bound on paper index we will fetch')
-    parser.add_argument('--results-per-iteration', type=int, default=30, help='passed to arxiv API')
+    parser.add_argument('--results-per-iteration', type=int, default=100, help='passed to arxiv API')
     parser.add_argument('--wait-time', type=float, default=5.0,
                         help='lets be gentle to arxiv API (in number of seconds)')
     parser.add_argument('--break-on-no-added', type=int, default=1,
@@ -304,7 +304,7 @@ if __name__ == "__main__":
 
     for keyword in [['push'], ['graph'], ['cold', 'start'],
                     ['debias'], ['cross', 'domain'], ['meta', 'learning'],
-                    ['click', 'through'],
+                    ['click-through'], ['Contrastive', 'Learning'], ['causal'],
                     ['Multi', 'task'], ['fairness'], ['bandits'],
                     ['Multi', 'Modal'], ['recommendation']]:
         is_first_line = True

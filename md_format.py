@@ -22,7 +22,9 @@ topics = {'graph': '基于Graph的推荐',
           'Multi-Modal': '多模态',
           'debias': '纠偏',
           'click-through': '点击率预估',
-          'recommendation': '推荐系统'}
+          'recommendation': '推荐系统',
+          'Contrastive-Learning': '对比学习',
+          'causal': '因果推断'}
 
 time = '2022-02-08'
 sep = '\t'
