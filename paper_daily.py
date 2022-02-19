@@ -21,6 +21,7 @@ from urllib.parse import urlencode, quote
 
 import execjs
 
+
 class Py4Js():
 
     def __init__(self):
@@ -68,12 +69,15 @@ class Py4Js():
     def getTk(self, text):
         return self.ctx.call("TL", text)
 
+
 # pip install  googletrans=4.0.0rc1
 
 class TranslatorWrapper:
     def __init__(self):
         # ('https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=en&tl=zh-cn&q={}', lambda res: eval(res.text)[0])
-        self.END_POINT_LIST = [('https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&sl=en&tl=zh-cn&q={}', lambda res: json.loads(res.text)[0][0][0])]
+        self.END_POINT_LIST = [(
+                               'https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&sl=en&tl=zh-cn&q={}',
+                               lambda res: json.loads(res.text)[0][0][0])]
         self.translator = Translator()
         self.baidu_translator = baidu_translator.Dict()
         self.test_case = 'graph neural networks'
@@ -85,7 +89,7 @@ class TranslatorWrapper:
                 # print(self._translate_v4(self.test_case))
                 break
             except Exception as e:
-                print(e)   # can be commented
+                print(e)  # can be commented
 
     def translate(self, txt, retry=10):
         for i in range(retry):
@@ -298,18 +302,18 @@ if __name__ == "__main__":
 
     # -----------------------------------------------------------------------------
     # main loop where we fetch the new results
-    print('database has %d entries at start' % (len(db), ))
+    print('database has %d entries at start' % (len(db),))
     num_added_total = 0
     DEBUG = True
 
-    for keyword in [['push'], ['graph'], ['cold', 'start'],
-                    ['debias'], ['cross', 'domain'], ['meta', 'learning'],
+    for keyword in [['reinforcement', 'learning'], ['push'], ['graph'], ['cold', 'start'], ['debias'],
+                    ['cross', 'domain'], ['meta', 'learning'],
                     ['click-through'], ['Contrastive', 'Learning'], ['causal'],
                     ['Multi', 'task'], ['fairness'], ['bandits'],
-                    ['Multi', 'Modal'], ['recommendation']]:
+                    ['Multi', 'Modal'], ['Point', 'Interest'], ['recommendation']]:
         is_first_line = True
         if isinstance(keyword, str): keyword = [keyword]
-        search_query = generate_query(keyword, use_abs=False, topic=['recommend'])
+        search_query = generate_query(keyword, use_abs=False, topic=['recommend', 'notification'])
         print('generated query={} for {}'.format(search_query, "-".join(keyword)))
 
         date = today.strftime('%Y-%m-%d')
@@ -319,7 +323,8 @@ if __name__ == "__main__":
         with open('data/{}/csv/{}.csv'.format(date, "-".join(keyword)), 'w') as f:
             for i in range(args.start_index, args.max_index, args.results_per_iteration):
                 print("Results %i - %i" % (i, i + args.results_per_iteration))
-                query = 'search_query=%s&sortBy=lastUpdatedDate&start=%i&max_results=%i' % (search_query, i, args.results_per_iteration)
+                query = 'search_query=%s&sortBy=lastUpdatedDate&start=%i&max_results=%i' % (
+                search_query, i, args.results_per_iteration)
                 response = fetch(base_url, query, retry=10)
                 parse = feedparser.parse(response)
                 num_added = 0
@@ -342,11 +347,12 @@ if __name__ == "__main__":
 
                     if is_first_line:
                         is_first_line = False
-                        f.write("{}\n".format(sep.join(fields+fy_fields)))
+                        f.write("{}\n".format(sep.join(fields + fy_fields)))
 
                     authors = ",".join([author['name'] for author in j['authors']])
-                    record = [j['title'].replace('\n', ''),  j['summary'].replace('\n', ''), authors,
-                              time.strftime('%Y-%m-%d', j['published_parsed']), time.strftime('%Y-%m-%d', j['updated_parsed']), j['id'], str(version),
+                    record = [j['title'].replace('\n', ''), j['summary'].replace('\n', ''), authors,
+                              time.strftime('%Y-%m-%d', j['published_parsed']),
+                              time.strftime('%Y-%m-%d', j['updated_parsed']), j['id'], str(version),
                               j['arxiv_primary_category']['term']]
 
                     tran_title = translator.translate(record[fields.index('title')], retry=10)
@@ -356,7 +362,7 @@ if __name__ == "__main__":
                         print('title={}, tran_title={}'.format(record[fields.index('title')], tran_title))
                         print('summary={}, tran_summary={}'.format(record[fields.index('summary')], tran_summary))
 
-                    f.write(sep.join(record+[tran_title, tran_summary]) + "\n")
+                    f.write(sep.join(record + [tran_title, tran_summary]) + "\n")
 
                     print('Paper %s added %s' % (j['updated'].encode('utf-8'), j['title'].encode('utf-8')))
                     # add to our database if we didn't have it before, or if this is a new version

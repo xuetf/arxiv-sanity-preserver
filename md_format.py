@@ -24,9 +24,12 @@ topics = {'graph': '基于Graph的推荐',
           'click-through': '点击率预估',
           'recommendation': '推荐系统',
           'Contrastive-Learning': '对比学习',
-          'causal': '因果推断'}
+          'causal': '因果推断',
+          'push': 'push通知推荐',
+          'fairness': '推荐的公平性',
+          'reinforcement-learning': '基于强化学习的推荐'}
 
-time = '2022-02-08'
+time = '2022-02-19'
 sep = '\t'
 
 for topic, alias_name in topics.items():
